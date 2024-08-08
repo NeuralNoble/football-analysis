@@ -5,9 +5,8 @@ import os
 import sys
 import cv2
 import numpy as np
-
 sys.path.append('../')
-from utils import get_centre, get_width
+from utils import get_centre, get_width , get_foot_position
 import pandas as pd
 
 
@@ -15,6 +14,17 @@ class Tracker:
     def __init__(self):
         self.model = YOLO('models/best.pt')
         self.tracker = sv.ByteTrack()
+
+    def add_position_to_tracks(sekf, tracks):
+        for object, object_tracks in tracks.items():
+            for frame_num, track in enumerate(object_tracks):
+                for track_id, track_info in track.items():
+                    bbox = track_info['bbox']
+                    if object == 'ball':
+                        position = get_centre(bbox)
+                    else:
+                        position = get_foot_position(bbox)
+                    tracks[object][frame_num][track_id]['position'] = position
 
     def interpolate_ball_positions(self, ball_positions):
         ball_positions = [x.get(1, {}).get('bbox', []) for x in ball_positions]
